@@ -85,8 +85,8 @@
           width="150"
           align="center"
         >
-          <template slot-scope="{row:{title}}">
-            <span>{{ title }}</span>
+          <template slot-scope="{row:{titleWrapper}}">
+            <span v-html="titleWrapper" />
           </template>
         </el-table-column>
         <el-table-column
@@ -94,8 +94,8 @@
           width="150"
           align="center"
         >
-          <template slot-scope="{row:{author}}">
-            <span>{{ author }}</span>
+          <template slot-scope="{row:{authorWrapper}}">
+            <span v-if="authorWrapper" />
           </template>
         </el-table-column>
         <el-table-column
@@ -157,17 +157,41 @@ export default {
 
     }
   },
+  created() {
+    this.parseQuery()
+  },
   mounted() {
     this.getList()
     this.getCategoryList()
   },
   methods: {
+    parseQuery() {
+      const listQuery = {
+        page: 1,
+        pageSize: 20
+      }
+      this.listQuery = { ...listQuery, ...this.listQuery }
+    },
+    wrapperKeyword(k, v) {
+      function highlight(value) {
+        return `<span style="color: #1890ff">${value}</span>`
+      }
+      if (!this.listQuery[k]) {
+        return v
+      } else {
+        return v.replace(new RegExp(this.listQuery[k], 'ig'), v => highlight(v))
+      }
+    },
     getList() {
       this.listLoading = true
       listBook(this.listQuery).then(response => {
         const { list } = response.data
         this.list = list
         this.listLoading = false
+        this.list.forEach(book => {
+          book.titleWrapper = this.wrapperKeyword('title', book.title)
+          book.authorWrapper = this.wrapperKeyword('author', book.author)
+        })
       })
     },
     sortChange(data) {
