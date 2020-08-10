@@ -71,6 +71,7 @@
         fit
         highlight-current-row
         style="width:100%"
+        :defaultSort="defaultSort"
         @sort-change="sortChange"
       >
         <el-table-column
@@ -223,7 +224,7 @@
       :total="total"
       :page.sync="listQuery.page"
       :limit.sync="listQuery.pageSize"
-      @pagination="handleFilter"
+      @pagination="refresh"
     />
 
   </div>
@@ -253,7 +254,8 @@ export default {
       showCover: false,
       categoryList: [],
       list: [],
-      total: 0
+      total: 0,
+      defaultSort:{}
 
     }
   },
@@ -278,15 +280,25 @@ export default {
   methods: {
     parseQuery() {
       const query = Object.assign({}, this.$route.query)
+      let sort = '+id'
       const listQuery = {
         page: 1,
         pageSize: 20,
-        sort: '+id'
+        sort
       }
       if (query) {
         query.page && (query.page = +query.page)
         query.pageSize && (query.pageSize = +query.pageSize)
+        query.sort && (sort = query.sort)
       }
+      const sortSymbol = sort[0]
+      const sortColumn = sort.slice(1, sort.length)
+      console.log(sortSymbol, sortColumn)
+      this.defaultSort = {
+        prop: sortColumn,
+        order: sortSymbol === '+' ? 'ascending' : 'descending'
+      }
+
       this.listQuery = { ...listQuery, ...query }
     },
     wrapperKeyword(k, v) {
@@ -364,7 +376,7 @@ export default {
     },
     handleFilter() {
       console.log('handleFilter', this.listQuery)
-      // this.listQuery.page = 1
+      this.listQuery.page = 1
       this.refresh()
       // this.getList()
     },
